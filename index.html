@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ootu — Kerala Diet Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7F1E2; --leaf:#3B6B4B; --leaf-dark:#2A4E37; --spice:#C1652F; --gold:#C79A2B;
+  --ink:#2B2118; --ink-soft:#6B5D4F; --card:#FFFDF7; --line:#E3D9C2;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --cream:#1C1812; --card:#26211A; --ink:#F1E9DA; --ink-soft:#BDAF98; --line:#3C3427; }
+}
+:root[data-theme="dark"]{ --cream:#1C1812; --card:#26211A; --ink:#F1E9DA; --ink-soft:#BDAF98; --line:#3C3427; }
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+html,body{overflow-x:hidden;max-width:100%;-webkit-overflow-scrolling:touch;}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Work Sans',sans-serif;line-height:1.45;}
+h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:22px;border-bottom:2px solid var(--line);padding-bottom:16px;}
+header h1{font-size:clamp(28px,4vw,40px);color:var(--leaf-dark);font-weight:700;}
+header p{margin:0;color:var(--ink-soft);font-size:14px;}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:24px;}
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr;}
+  .panel{position:static;max-height:none;}
+  .totals{position:static;}
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;}
+.panel{position:sticky;top:16px;align-self:start;}
+label{display:block;font-size:12.5px;color:var(--ink-soft);margin:14px 0 5px;}
+label:first-of-type{margin-top:0;}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--cream);color:var(--ink);font:inherit;font-size:14.5px;}
+.seg{display:flex;gap:6px;margin-top:6px;}
+.seg button{flex:1;padding:9px 4px;border:1px solid var(--line);background:var(--cream);color:var(--ink-soft);border-radius:6px;font:inherit;font-size:13px;cursor:pointer;}
+.seg button.active{background:var(--leaf);color:#fff;border-color:var(--leaf);font-weight:600;}
+.results{margin-top:18px;border-top:1px solid var(--line);padding-top:16px;}
+.results .num{font-family:'Fraunces',serif;font-size:30px;color:var(--spice);font-weight:700;}
+.results .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.results .row span:first-child{color:var(--ink-soft);font-size:13px;}
+.bmi-tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;background:var(--leaf);color:#fff;margin-top:2px;}
+.totals{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+.tbar{flex:1;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+.tbar h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;font-family:'Work Sans',sans-serif;}
+.tbar .val{font-family:'Fraunces',serif;font-size:22px;margin:4px 0 8px;}
+.track{height:8px;border-radius:6px;background:var(--line);overflow:hidden;}
+.fill{height:100%;background:var(--leaf);border-radius:6px;transition:width .3s;}
+.fill.over{background:var(--spice);}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.filters input[type=text]{flex:1;min-width:160px;}
+.filters select{width:auto;}
+.chip{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer;color:var(--ink-soft);}
+.chip.active{background:var(--gold);color:#2B2118;border-color:var(--gold);font-weight:600;}
+.section-title{font-size:19px;color:var(--leaf-dark);margin:26px 0 10px;font-weight:600;}
+.section-title:first-child{margin-top:0;}
+.food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+.food{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:12px 13px;cursor:pointer;transition:border-color .15s;position:relative;}
+.food:hover{border-color:var(--gold);}
+.food.sel{border-color:var(--leaf);background:rgba(59,107,75,.09);}
+.food .name{font-weight:600;font-size:14px;margin-bottom:4px;padding-right:20px;}
+.food .macro{font-size:12px;color:var(--ink-soft);}
+.food .tag{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;}
+.tag.loss{background:#DCEEE0;color:#2A4E37;}
+.tag.gain{background:#F5E2C8;color:#8C5A17;}
+.check{position:absolute;bottom:10px;right:10px;width:16px;height:16px;border-radius:4px;border:1.5px solid var(--ink-soft);}
+.food.sel .check{background:var(--leaf);border-color:var(--leaf);}
+footer{margin-top:30px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Ootu</h1>
+  <p>Calorie &amp; protein targets, built around Kerala home cooking</p>
+</header>
+
+<div class="grid">
+  <div class="panel card">
+    <label>Height (cm)</label>
+    <input type="number" id="height" value="170" min="100" max="230">
+    <label>Weight (kg)</label>
+    <input type="number" id="weight" value="70" min="30" max="200">
+    <label>Age</label>
+    <input type="number" id="age" value="30" min="14" max="90">
+    <label>Sex</label>
+    <div class="seg" id="sexSeg">
+      <button class="active" data-v="m">Male</button>
+      <button data-v="f">Female</button>
+    </div>
+    <label>Activity level</label>
+    <select id="activity">
+      <option value="1.2">Sedentary (desk job, little exercise)</option>
+      <option value="1.375">Light (exercise 1–3x/week)</option>
+      <option value="1.55" selected>Moderate (exercise 3–5x/week)</option>
+      <option value="1.725">Active (exercise 6–7x/week)</option>
+    </select>
+    <label>Goal</label>
+    <div class="seg" id="goalSeg">
+      <button data-v="loss">Weight loss</button>
+      <button class="active" data-v="maintain">Maintain</button>
+      <button data-v="gain">Weight gain</button>
+    </div>
+
+    <div class="results">
+      <div class="row"><span>BMI</span><span id="bmi">–</span></div>
+      <div class="row"><span>Daily calorie target</span><span class="num" id="calTarget">–</span></div>
+      <div class="row"><span>Daily protein target</span><span class="num" id="proTarget">–</span></div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:10px">Estimates only (Mifflin-St Jeor), not medical advice. Loss = -500 kcal/day, gain = +500 kcal/day. Protein: 2.0 g/kg (loss), 1.6 g/kg (maintain), 1.8 g/kg (gain).</p>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="totals">
+      <div class="tbar">
+        <h3>Calories selected</h3>
+        <div class="val"><span id="selCal">0</span> / <span id="calTarget2">–</span> kcal</div>
+        <div class="track"><div class="fill" id="calFill" style="width:0%"></div></div>
+      </div>
+      <div class="tbar">
+        <h3>Protein selected</h3>
+        <div class="val"><span id="selPro">0</span> / <span id="proTarget2">–</span> g</div>
+        <div class="track"><div class="fill" id="proFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search dishes…">
+      <select id="catFilter"><option value="all">All categories</option></select>
+      <div class="chip active" data-f="all">All</div>
+      <div class="chip" data-f="loss">Good for loss</div>
+      <div class="chip" data-f="gain">Good for gain</div>
+      <div class="chip" data-f="mart">Supermarket picks</div>
+    </div>
+
+    <div id="foodList"></div>
+  </div>
+</div>
+<footer>Nutrition values are typical per-serving estimates for home-style Kerala cooking and common supermarket items — actual values vary with recipe, oil and portion size.</footer>
+</div>
+
+<script>
+// [name, category, calories, protein(g), type: veg/nonveg/mart]
+const DATA = [
+["Rice Puttu","Breakfast",200,4,"veg"],["Rava Puttu","Breakfast",210,5,"veg"],["Idli (2pc)","Breakfast",120,4,"veg"],
+["Dosa","Breakfast",133,3,"veg"],["Uppumavu","Breakfast",250,6,"veg"],["Idiyappam","Breakfast",180,4,"veg"],
+["Palappam (2pc)","Breakfast",220,4,"veg"],["Appam (2pc)","Breakfast",220,4,"veg"],["Coconut Ada (2pc)","Breakfast",200,3,"veg"],
+["Wheat Vellayappam (2pc)","Breakfast",210,5,"veg"],
+["Cheru Payaru Curry","Breakfast Sides",150,9,"veg"],["Kadala Curry","Breakfast Sides",180,10,"veg"],
+["Chana Masala","Breakfast Sides",210,11,"veg"],["Coconut Chutney","Breakfast Sides",70,1,"veg"],
+["Coconut Peanut Chutney","Breakfast Sides",90,3,"veg"],["Pearl Onion Chutney","Breakfast Sides",75,1,"veg"],
+["Onion Chutney","Breakfast Sides",60,1,"veg"],["Tomato Chutney","Breakfast Sides",55,1,"veg"],
+["Green Peas Chutney","Breakfast Sides",80,3,"veg"],["Kerala Sambar","Breakfast Sides",130,6,"veg"],
+["Egg Roast (2 eggs)","Breakfast Sides",220,13,"nonveg"],["Fish Molee","Breakfast Sides",250,20,"nonveg"],
+["Vegetable Stew","Breakfast Sides",180,3,"veg"],["Chicken Masala Gravy","Breakfast Sides",280,22,"nonveg"],
+["Kerala Chicken Gravy","Breakfast Sides",270,21,"nonveg"],["Chicken & Potato Curry","Breakfast Sides",300,20,"nonveg"],
+["CheruPayaru Stew","Breakfast Sides",160,8,"veg"],
+["Fried Shrimps","Appetizers",220,18,"nonveg"],["Ulli Sarlas (onion salad)","Appetizers",40,1,"veg"],
+["Chicken Cutlets (2pc)","Appetizers",250,14,"nonveg"],["Kerala Fish Cutlets (2pc)","Appetizers",220,15,"nonveg"],
+["Pan Fried Fish Cutlets","Appetizers",200,16,"nonveg"],["Vegetable Cutlets (2pc)","Appetizers",180,4,"veg"],
+["Spicy Fried Chicken","Appetizers",280,22,"nonveg"],["Kerala Beef Fry","Appetizers",250,24,"nonveg"],
+["Spicy Beef/Pork Fry","Appetizers",270,22,"nonveg"],["Chicken Stir Fry (Kozhi Varattiyathu)","Appetizers",260,23,"nonveg"],
+["Kerala Chicken Fry","Appetizers",270,24,"nonveg"],["Kappa Chenda","Appetizers",200,2,"veg"],
+["Karimeen Fry","Appetizers",230,20,"nonveg"],["Masala Fried Fish","Appetizers",240,19,"nonveg"],
+["Fried Fish w/ Caramelized Onions","Appetizers",250,19,"nonveg"],
+["Kerala Porotta","Breads",260,4,"veg"],["Rotti (bakery bread)","Breads",150,5,"veg"],["Dinner Roll","Breads",90,3,"veg"],
+["Kerala Chicken Roast","Bread Curries",280,22,"nonveg"],["Prawns Tomato Roast","Bread Curries",230,18,"nonveg"],
+["Spicy Chilly Fish Masala","Bread Curries",240,19,"nonveg"],["Beef Masala","Bread Curries",270,23,"nonveg"],
+["Spicy Beef Tomato Curry","Bread Curries",260,22,"nonveg"],["Red Chilly Tomato Chicken Curry","Bread Curries",250,21,"nonveg"],
+["Tomato Chicken Roast","Bread Curries",260,21,"nonveg"],
+["Kappa Puzhukku","Rice & Mains",190,2,"veg"],["Kappa Erachi (with beef)","Rice & Mains",320,18,"nonveg"],
+["Pidi (rice dumplings)","Rice & Mains",220,4,"veg"],["Kerala Fish Biriyani","Rice & Mains",450,25,"nonveg"],
+["Egg Biriyani","Rice & Mains",420,16,"nonveg"],["Vegetable Biriyani","Rice & Mains",400,8,"veg"],
+["Chicken Pulav","Rice & Mains",430,22,"nonveg"],["Ghee Rice","Rice & Mains",300,5,"veg"],
+["Chicken Biryani","Rice & Mains",460,26,"nonveg"],["Shrimp Biriyani","Rice & Mains",440,24,"nonveg"],
+["Plain Rice (1 cup)","Rice & Mains",200,4,"veg"],
+["Kerala Fish Curry","Rice Sides",220,18,"nonveg"],["Netholi (Anchovy) Curry","Rice Sides",210,17,"nonveg"],
+["Simple Prawns Curry","Rice Sides",230,20,"nonveg"],["Spicy Kerala Chicken Masala","Rice Sides",260,22,"nonveg"],
+["Kerala Pork Masala","Rice Sides",280,21,"nonveg"],["Chicken Curry for Pidi","Rice Sides",250,21,"nonveg"],
+["Dried Prawns Mango Curry","Rice Gravies",180,12,"nonveg"],["Moru Kachiyathu (buttermilk)","Rice Gravies",60,3,"veg"],
+["Pulissery","Rice Gravies",140,3,"veg"],["Cheerayum Parippum (spinach dal)","Rice Gravies",150,8,"veg"],
+["Tomato Rasam","Rice Gravies",60,2,"veg"],["Thakkali Curry","Rice Gravies",100,2,"veg"],
+["Kerala Mushroom Curry","Rice Gravies",130,4,"veg"],["Vellarikka Moru Curry","Rice Gravies",90,3,"veg"],
+["Fried Anchovies","Non-veg Sides",200,18,"nonveg"],["Pork Ularthiyathu","Non-veg Sides",300,22,"nonveg"],
+["Spicy Pork Curry","Non-veg Sides",280,21,"nonveg"],["Mutta Chikkiyathu (scrambled eggs)","Non-veg Sides",180,12,"nonveg"],
+["Dried Prawns Stir Fry","Non-veg Sides",220,19,"nonveg"],["Varutharacha Meen Curry","Non-veg Sides",240,19,"nonveg"],
+["Thenga Aracha Meen Curry","Non-veg Sides",230,18,"nonveg"],["Tomato Fish Curry","Non-veg Sides",210,17,"nonveg"],
+["Unakka Chemmeen Podichathu","Non-veg Sides",200,20,"nonveg"],
+["Cabbage Thoran","Veg Sides",110,3,"veg"],["Beans Thoran","Veg Sides",100,3,"veg"],
+["Cabbage Carrot Thoran","Veg Sides",105,3,"veg"],["Ivy Gourd Thoran","Veg Sides",100,2,"veg"],
+["Aviyal","Veg Sides",150,4,"veg"],["Beans Mezhukkupuratti","Veg Sides",110,3,"veg"],
+["Spinach Thoran","Veg Sides",90,4,"veg"],["Achinga Mezhukkupuratti","Veg Sides",100,3,"veg"],
+["Mushroom Theeyal","Veg Sides",140,5,"veg"],["Mushroom Thoran","Veg Sides",110,5,"veg"],
+["Pavakka (Bitter Gourd) Thoran","Veg Sides",90,2,"veg"],
+["Madukku San (coconut crepes)","Snacks",180,3,"veg"],["Aval Vilayichathu","Snacks",220,3,"veg"],
+["Avalos Podi","Snacks",200,4,"veg"],["Godhambu Ada","Snacks",190,4,"veg"],
+["Semiya Payasam","Desserts",250,5,"veg"],["Cracked Wheat Payasam","Desserts",220,5,"veg"],
+["Mambazha Pradhaman","Desserts",280,4,"veg"],["Rice Pudding","Desserts",200,5,"veg"],
+["Paal Pidi","Desserts",210,5,"veg"],["Pazham with Pani","Desserts",180,1,"veg"],
+["Greek Yogurt (150g)","Supermarket",100,15,"mart"],["Plain Curd (200g)","Supermarket",120,7,"mart"],
+["Chicken Breast, grilled (100g)","Supermarket",165,31,"mart"],["Chicken Thigh, cooked (100g)","Supermarket",210,26,"mart"],
+["Fish Fillet, grilled (100g)","Supermarket",200,22,"mart"],["Boiled Eggs (2)","Supermarket",140,12,"mart"],
+["Egg Whites (3)","Supermarket",50,11,"mart"],["Paneer (100g)","Supermarket",265,18,"mart"],
+["Milk (1 cup)","Supermarket",150,8,"mart"],["Oats, cooked (1 cup)","Supermarket",150,5,"mart"],
+["Almonds (30g)","Supermarket",170,6,"mart"],["Peanut Butter (2 tbsp)","Supermarket",190,8,"mart"],
+["Banana (1 medium)","Supermarket",105,1,"mart"],["Sweet Potato (1 medium)","Supermarket",100,2,"mart"],
+["Tofu (100g)","Supermarket",145,15,"mart"],["Whey Protein (1 scoop)","Supermarket",120,24,"mart"]
+];
+
+let selected = new Set();
+let activeFilter = "all";
+
+function classify(cal, pro){
+  const ratio = pro*4/cal;
+  if(cal<=200 && ratio>=0.28) return "loss";
+  if(cal>=280) return "gain";
+  return "";
+}
+
+function calcTargets(){
+  const h = +document.getElementById('height').value;
+  const w = +document.getElementById('weight').value;
+  const age = +document.getElementById('age').value;
+  const sex = document.querySelector('#sexSeg .active').dataset.v;
+  const act = +document.getElementById('activity').value;
+  const goal = document.querySelector('#goalSeg .active').dataset.v;
+
+  const bmr = sex==='m' ? 10*w+6.25*h-5*age+5 : 10*w+6.25*h-5*age-161;
+  const tdee = bmr*act;
+  let cal = tdee, proPerKg = 1.6;
+  if(goal==='loss'){ cal = tdee-500; proPerKg = 2.0; }
+  if(goal==='gain'){ cal = tdee+500; proPerKg = 1.8; }
+  const protein = w*proPerKg;
+  const bmi = w/((h/100)**2);
+
+  document.getElementById('bmi').innerHTML = bmi.toFixed(1)+' <span class="bmi-tag">'+
+    (bmi<18.5?'Underweight':bmi<25?'Normal':bmi<30?'Overweight':'Obese')+'</span>';
+  document.getElementById('calTarget').textContent = Math.round(cal)+' kcal';
+  document.getElementById('proTarget').textContent = Math.round(protein)+' g';
+  document.getElementById('calTarget2').textContent = Math.round(cal);
+  document.getElementById('proTarget2').textContent = Math.round(protein);
+  window.__cal = cal; window.__pro = protein;
+  updateTotals();
+}
+
+function updateTotals(){
+  let cal=0,pro=0;
+  selected.forEach(i=>{ cal+=DATA[i][2]; pro+=DATA[i][3]; });
+  document.getElementById('selCal').textContent = cal;
+  document.getElementById('selPro').textContent = pro;
+  const ct = window.__cal||2000, pt = window.__pro||100;
+  const cf = document.getElementById('calFill'), pf = document.getElementById('proFill');
+  cf.style.width = Math.min(cal/ct*100,100)+'%'; cf.classList.toggle('over', cal>ct);
+  pf.style.width = Math.min(pro/pt*100,100)+'%'; pf.classList.toggle('over', pro>pt);
+}
+
+function render(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const cats = [...new Set(DATA.map(d=>d[1]))];
+  const catSel = document.getElementById('catFilter');
+  if(catSel.options.length===1) cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+
+  const byCat = {};
+  DATA.forEach((d,i)=>{
+    const [name,category,cal,pro,type] = d;
+    if(q && !name.toLowerCase().includes(q)) return;
+    if(cat!=='all' && category!==cat) return;
+    const tag = classify(cal,pro);
+    if(activeFilter==='loss' && tag!=='loss') return;
+    if(activeFilter==='gain' && tag!=='gain') return;
+    if(activeFilter==='mart' && type!=='mart') return;
+    (byCat[category] = byCat[category]||[]).push(i);
+  });
+
+  const list = document.getElementById('foodList');
+  list.innerHTML='';
+  Object.keys(byCat).forEach(category=>{
+    const h = document.createElement('div'); h.className='section-title'; h.textContent=category;
+    list.appendChild(h);
+    const grid = document.createElement('div'); grid.className='food-grid';
+    byCat[category].forEach(i=>{
+      const [name,,cal,pro] = DATA[i];
+      const tag = classify(cal,pro);
+      const el = document.createElement('div');
+      el.className = 'food'+(selected.has(i)?' sel':'');
+      el.innerHTML = `${tag?`<span class="tag ${tag}">${tag==='loss'?'Loss pick':'Gain pick'}</span>`:''}
+        <div class="name">${name}</div>
+        <div class="macro">${cal} kcal · ${pro} g protein</div>
+        <div class="check"></div>`;
+      el.onclick = ()=>{ selected.has(i)?selected.delete(i):selected.add(i); render(); updateTotals(); };
+      grid.appendChild(el);
+    });
+    list.appendChild(grid);
+  });
+}
+
+document.querySelectorAll('#sexSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#sexSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');calcTargets();});
+document.querySelectorAll('#goalSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#goalSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');calcTargets();});
+['height','weight','age','activity'].forEach(id=>document.getElementById(id).addEventListener('input',calcTargets));
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('catFilter').addEventListener('change',render);
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');activeFilter=c.dataset.f;render();});
+
+calcTargets();
+render();
+</script>
+</body>
+</html>
